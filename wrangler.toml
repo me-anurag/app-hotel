@@ -1,8 +1,8 @@
-# Sitebox on Cloudflare Workers + R2.
-# First deploy:  see README "Deploy to Cloudflare".
+# Sitebox on Cloudflare Workers (free plan): D1 for the index, KV for file contents.
 name = "sitebox"
 main = "worker/src/index.js"
 compatibility_date = "2025-09-01"
+workers_dev = true
 
 # The PWA shell. The Worker runs first so it can handle /api/* and /s/*,
 # and hands everything else to these static files.
@@ -12,18 +12,26 @@ binding = "ASSETS"
 not_found_handling = "single-page-application"
 run_worker_first = true
 
-# Where sites are stored. Create it once: npx wrangler r2 bucket create sitebox
-[[r2_buckets]]
-binding = "BUCKET"
-bucket_name = "sitebox"
+# Site index: sites, versions, file lists.  Schema: migrations/
+[[d1_databases]]
+binding = "DB"
+database_name = "sitebox"
+database_id = "cb099ebf-6cf7-4420-abaf-1c6d56406f19"
+migrations_dir = "migrations"
+
+# File contents, stored once per unique content (key "b/<sha256>").
+[[kv_namespaces]]
+binding = "FILES"
+id = "24c6ca9357f549c49f7d8ec71efbfdea"
 
 [vars]
 # "true" lets anyone with a link view the library and sites. Uploads always need the token.
 PUBLIC_READ = "false"
 MAX_VERSIONS = "10"
 MAX_UPLOAD_MB = "200"
+MAX_FILE_MB = "25"
 
-# Daily sweep of uploads that were started but never finished.
+# Daily cleanup of unfinished uploads and unused file contents.
 [triggers]
 crons = ["17 3 * * *"]
 

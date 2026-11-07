@@ -1,15 +1,16 @@
 /* Sitebox on Cloudflare Workers.
    - /api/*        JSON API (token-protected writes; reads too unless PUBLIC_READ="true")
-   - /s/<slug>/*   stored sites, streamed from R2
+   - /s/<slug>/*   stored sites (index in D1, contents in KV)
    - everything else: the PWA shell from static assets (./app)
 
-   Upload protocol (keeps each request tiny on CPU, so the free plan is enough):
-     POST /api/sites/:slug/uploads            {files:[{path,size}], title?, message?, source?} -> {version, paths}
-     PUT  /api/sites/:slug/uploads/:v/<path>  raw file body (once per file)
-     POST /api/sites/:slug/uploads/:v/commit  -> site summary (now live)
+   Upload protocol (content-addressed; each request stays tiny on CPU, so the free plan is enough):
+     POST /api/sites/:slug/uploads                {files:[{path,size,hash}], title?, message?, source?}
+                                                  -> {version, paths, missing: [hash...]}
+     PUT  /api/sites/:slug/uploads/:v/blobs/:hash raw bytes, only for hashes listed in "missing"
+     POST /api/sites/:slug/uploads/:v/commit      -> site summary (now live)
    Shortcut: PUT /api/sites/:slug with a single HTML body (?filename=&title=&message=). */
 import { HttpError, json } from "./util.js";
-import { readDb } from "./db.js";
+import { getRev } from "./db.js";
 import { isAuthed, publicRead, requireRead, requireWrite, sessionCookie, safeEqual } from "./auth.js";
 import * as sites from "./sites.js";
 import { serveSite } from "./serve.js";
@@ -24,9 +25,9 @@ async function api(req, env, ctx, url) {
   const method = req.method;
 
   if (section === "ping" && method === "GET") {
-    const { data } = await readDb(env);
     const authed = isAuthed(req, env);
-    return json({ ok: true, name: "sitebox", authed, publicRead: publicRead(env), rev: authed || publicRead(env) ? data.rev : null });
+    const rev = authed || publicRead(env) ? await getRev(env) : null;
+    return json({ ok: true, name: "sitebox", authed, publicRead: publicRead(env), rev });
   }
 
   if (section === "session") {
@@ -56,14 +57,12 @@ async function api(req, env, ctx, url) {
   requireWrite(req, env);
 
   if (action === "uploads") {
-    const [v, ...pathParts] = rest;
-    if (method === "POST" && !v) return json(await sites.beginUpload(env, ctx, slug, await readJson(req)), 201);
+    const [v, step, hash] = rest;
+    if (method === "POST" && !v) return json(await sites.beginUpload(env, slug, await readJson(req)), 201);
     const version = Number(v);
     if (!Number.isInteger(version)) throw new HttpError(400, "Bad version");
-    if (method === "POST" && pathParts.length === 1 && pathParts[0] === "commit") {
-      return json(await sites.commitUpload(env, ctx, slug, version), 201);
-    }
-    if (method === "PUT" && pathParts.length) return json(await sites.putFile(env, req, slug, version, pathParts.join("/")));
+    if (method === "POST" && step === "commit") return json(await sites.commitUpload(env, ctx, slug, version), 201);
+    if (method === "PUT" && step === "blobs" && hash) return json(await sites.putBlob(env, req, slug, version, hash));
   }
 
   if (method === "PUT" && !action) {
@@ -90,8 +89,8 @@ export default {
     }
   },
 
-  // Daily cleanup of abandoned uploads (see triggers in wrangler.toml).
-  async scheduled(_event, env, ctx) {
-    await sites.sweepPending(env, ctx);
+  // Daily cleanup of abandoned uploads and unused file contents (see triggers in wrangler.toml).
+  async scheduled(_event, env) {
+    await sites.cleanup(env);
   },
 };

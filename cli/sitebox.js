@@ -10,6 +10,7 @@
 const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
+const crypto = require("node:crypto");
 const { execFile } = require("node:child_process");
 const { readZip } = require("../lib/zip");
 const { readDir } = require("../lib/files");
@@ -116,18 +117,19 @@ function collect(target) {
   return files;
 }
 
-/** Upload protocol: declare the files -> send each one (6 at a time) -> commit. */
+/** Upload protocol: declare files with SHA-256 -> send only contents the server lacks (6 at a time) -> commit. */
 async function upload(cfg, slug, files, meta, onProgress = () => {}) {
+  const hashed = files.map((f) => ({ ...f, hash: crypto.createHash("sha256").update(f.data).digest("hex") }));
   const begin = await api(cfg, "POST", `/api/sites/${slug}/uploads`,
-    JSON.stringify({ files: files.map((f) => ({ path: f.path, size: f.data.length })), ...meta }),
+    JSON.stringify({ files: hashed.map((f) => ({ path: f.path, size: f.data.length, hash: f.hash })), ...meta }),
     { "Content-Type": "application/json" });
-  const jobs = files.map((f, i) => ({ data: f.data, path: begin.paths[i] })).filter((j) => j.path);
+  const byHash = new Map(hashed.map((f) => [f.hash, f.data]));
+  const jobs = begin.missing.map((hash) => ({ hash, data: byHash.get(hash) }));
   let done = 0, next = 0;
   const lane = async () => {
     while (next < jobs.length) {
       const j = jobs[next++];
-      const route = `/api/sites/${slug}/uploads/${begin.version}/${j.path.split("/").map(encodeURIComponent).join("/")}`;
-      await api(cfg, "PUT", route, j.data, { "Content-Type": "application/octet-stream" });
+      await api(cfg, "PUT", `/api/sites/${slug}/uploads/${begin.version}/blobs/${j.hash}`, j.data, { "Content-Type": "application/octet-stream" });
       onProgress(++done, jobs.length);
     }
   };

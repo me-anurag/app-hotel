@@ -1,77 +1,52 @@
-/* Site index stored as one JSON object in R2 ("db.json"), updated with
-   optimistic concurrency (etag check + retry) so parallel pushes never clobber.
+/* Storage helpers: D1 holds the index (sites, versions, files), KV holds file contents
+   keyed by SHA-256, so identical content is stored once across files, versions and sites. */
 
-   R2 layout:
-     db.json                    { rev, sites: { <slug>: SiteMeta } }
-     f/<slug>/<version>/<path>  site files
-     m/<slug>/<version>.json    manifest: { paths: [...] } for a version
-*/
-import { HttpError } from "./util.js";
+export const blobKey = (hash) => `b/${hash}`;
+export const HASH_RE = /^[0-9a-f]{64}$/;
 
-const DB_KEY = "db.json";
-let cache = null;   // { data, etag, at } per isolate, short-lived, for fast site serving
+export async function getRev(env) {
+  return (await env.DB.prepare("SELECT value FROM meta WHERE key = 'rev'").first("value")) ?? 0;
+}
+export const bumpRev = (env) => env.DB.prepare("UPDATE meta SET value = value + 1 WHERE key = 'rev'");
 
-export const fileKey = (slug, v, path) => `f/${slug}/${v}/${path}`;
-export const manifestKey = (slug, v) => `m/${slug}/${v}.json`;
+const SUMMARY_SQL = `
+  SELECT s.slug, s.title, s.entry, s.current, s.created_at, s.updated_at, v.files, v.bytes,
+         (SELECT COUNT(*) FROM versions x WHERE x.slug = s.slug) AS version_count
+  FROM sites s JOIN versions v ON v.slug = s.slug AND v.id = s.current`;
 
-export async function readDb(env, { maxAgeMs = 0 } = {}) {
-  if (maxAgeMs && cache && Date.now() - cache.at < maxAgeMs) return cache;
-  const obj = await env.BUCKET.get(DB_KEY);
-  cache = obj
-    ? { data: await obj.json(), etag: obj.etag, at: Date.now() }
-    : { data: { rev: 0, sites: {} }, etag: null, at: Date.now() };
-  return cache;
+const toSummary = (r) => ({
+  slug: r.slug, title: r.title, entry: r.entry, current: r.current,
+  url: `/s/${r.slug}/`, files: r.files, bytes: r.bytes,
+  createdAt: r.created_at, updatedAt: r.updated_at, versionCount: r.version_count,
+});
+
+export async function listSummaries(env) {
+  const { results } = await env.DB.prepare(`${SUMMARY_SQL} ORDER BY s.updated_at DESC`).all();
+  return results.map(toSummary);
 }
 
-/** Apply fn(data) and save; retries if another request saved first. fn must only touch `data`. */
-export async function mutate(env, fn) {
-  for (let attempt = 0; attempt < 6; attempt++) {
-    const { data, etag } = await readDb(env);
-    const copy = structuredClone(data);
-    const result = await fn(copy);
-    copy.rev = (copy.rev || 0) + 1;
-    const saved = await env.BUCKET.put(DB_KEY, JSON.stringify(copy), {
-      httpMetadata: { contentType: "application/json" },
-      ...(etag ? { onlyIf: { etagMatches: etag } } : {}),
-    });
-    if (saved) {
-      cache = { data: copy, etag: saved.etag, at: Date.now() };
-      return result;
-    }
-    await new Promise((r) => setTimeout(r, 30 + Math.random() * 120));
-  }
-  throw new HttpError(409, "Too many simultaneous changes, please try again");
+export async function getSummary(env, slug) {
+  const r = await env.DB.prepare(`${SUMMARY_SQL} WHERE s.slug = ?`).bind(slug).first();
+  return r ? toSummary(r) : null;
 }
 
-export function summarise(site) {
-  const cur = site.versions.find((v) => v.id === site.current) || {};
-  return {
-    slug: site.slug, title: site.title, entry: site.entry, current: site.current,
-    url: `/s/${site.slug}/`, files: cur.files || 0, bytes: cur.bytes || 0,
-    createdAt: site.createdAt, updatedAt: site.updatedAt, versionCount: site.versions.length,
-  };
+/** Delete file contents no longer used by any version or in-progress upload. */
+export async function collectGarbage(env) {
+  const cutoff = new Date(Date.now() - 15 * 60 * 1000).toISOString();   // leave fresh uploads alone
+  const { results } = await env.DB.prepare(`
+    SELECT hash FROM blobs
+    WHERE created_at < ?
+      AND hash NOT IN (SELECT hash FROM files)
+      AND hash NOT IN (SELECT json_extract(j.value, '$.hash') FROM pending p, json_each(p.files) j)
+    LIMIT 200`).bind(cutoff).all();
+  if (!results.length) return 0;
+  const hashes = results.map((r) => r.hash);
+  await env.DB.prepare("DELETE FROM blobs WHERE hash IN (SELECT value FROM json_each(?))").bind(JSON.stringify(hashes)).run();
+  for (const h of hashes) await env.FILES.delete(blobKey(h));
+  return hashes.length;
 }
 
-export const isLive = (site) => site && site.versions.length > 0;
-
-/** Delete every object under a prefix (batched, paginated). */
-export async function deletePrefix(env, prefix) {
-  let cursor;
-  do {
-    const page = await env.BUCKET.list({ prefix, cursor, limit: 1000 });
-    if (page.objects.length) await env.BUCKET.delete(page.objects.map((o) => o.key));
-    cursor = page.truncated ? page.cursor : undefined;
-  } while (cursor);
-}
-
-/** Map of path -> size for every object under a prefix. */
-export async function listSizes(env, prefix) {
-  const out = new Map();
-  let cursor;
-  do {
-    const page = await env.BUCKET.list({ prefix, cursor, limit: 1000 });
-    for (const o of page.objects) out.set(o.key.slice(prefix.length), o.size);
-    cursor = page.truncated ? page.cursor : undefined;
-  } while (cursor);
-  return out;
+export async function sha256Hex(buf) {
+  const d = new Uint8Array(await crypto.subtle.digest("SHA-256", buf));
+  return [...d].map((b) => b.toString(16).padStart(2, "0")).join("");
 }

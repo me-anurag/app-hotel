@@ -1,35 +1,32 @@
 # Sitebox
 
-An installable PWA that holds your websites, running on **Cloudflare Workers + R2**. You add a site with the **Upload** button (HTML file, several files, a folder, or a .zip) or **push it from VS Code** with one command, like `git push`. Every push is kept as a version you can roll back to, and every site is cached on your devices so the library works offline.
+An installable PWA that holds your websites, running free on **Cloudflare Workers** (D1 database + KV storage, no card needed). You add a site with the **Upload** button (HTML file, several files, a folder, or a .zip) or **push it from VS Code** with one command, like `git push`. Every push is kept as a version you can roll back to, and every site is cached on your devices so the library works offline.
 
 The first site in the box is **Builder's Quest** (`sites/builders-quest/`), the original `builders-quest.html` split into modules.
 
-## Deploy to Cloudflare (one time, ~10 minutes)
+## Live instance
 
-You need a free Cloudflare account. R2 may ask you to add a payment method before you can enable it, but personal use stays within the free tier (10 GB of storage).
+- **App:** https://sitebox.i-anurag.workers.dev (install it from the browser on phone or computer)
+- **Token:** kept in your password manager. The `sitebox` CLI on this PC is already logged in (`~/.sitebox.json`).
 
-```bash
-npm install                                   # installs wrangler (Cloudflare's CLI)
-npx wrangler login                            # opens the browser to authorise
-npx wrangler r2 bucket create sitebox         # where your sites are stored
-npx wrangler deploy                           # prints your URL: https://sitebox.<you>.workers.dev
-
-# Make a long random token and save it somewhere safe (a password manager):
-node -e "console.log(require('crypto').randomBytes(24).toString('base64url'))"
-npx wrangler secret put SITEBOX_TOKEN         # paste the token when asked
-```
-
-Then connect the CLI and put Builder's Quest in the box:
+## Deploy your own (free plan)
 
 ```bash
+npm install
+npx wrangler login
+npx wrangler d1 create sitebox                # put the printed database_id in wrangler.toml
+npx wrangler kv namespace create sitebox      # put the printed id in wrangler.toml
+npx wrangler d1 migrations apply sitebox --remote
+npx wrangler deploy                           # prints https://sitebox.<you>.workers.dev
+node -e "console.log(require('crypto').randomBytes(24).toString('base64url'))"   # your token
+npx wrangler secret put SITEBOX_TOKEN         # paste it
+
 npm link                                      # puts `sitebox` on your PATH
-sitebox login https://sitebox.<you>.workers.dev <your-token>
+sitebox login https://sitebox.<you>.workers.dev <token>
 npm run seed                                  # uploads sites/builders-quest
 ```
 
-Open your URL on your phone or computer, enter the token once, and install it (Chrome/Edge: install icon in the address bar; iPhone Safari: Share → Add to Home Screen).
-
-**Updating Sitebox itself** (the app or the Worker): `npm run deploy`. Your sites in R2 are not touched.
+**Updating Sitebox itself** (the app or the Worker): `npm run deploy`. Your sites are not touched. A new file in `migrations/` needs `npx wrangler d1 migrations apply sitebox --remote` first.
 
 ## Push from VS Code
 
@@ -55,7 +52,8 @@ To push with one key, copy `.vscode/tasks.json` into your project and press **Ct
 ## Run locally
 
 ```bash
-npm run dev          # http://localhost:8787, with a local copy of R2 on disk (.wrangler/)
+npx wrangler d1 migrations apply sitebox --local   # once
+npm run dev          # http://localhost:8787, with local D1/KV on disk (.wrangler/)
 ```
 
 The local token is in `.dev.vars` (`dev-token`). The CLI talks to `http://localhost:8787` unless you've run `sitebox login`, or you set `SITEBOX_SERVER`/`SITEBOX_TOKEN`.
@@ -73,19 +71,23 @@ app/                   PWA shell (static assets served by the Worker)
   index.html, manifest.webmanifest, sw.js, css/app.css, icons/
   js/  main (routing) · store · api · library · viewer · upload · details · pushhelp · offline · zip · ui
 worker/src/            Cloudflare Worker
-  index.js (routes) · sites.js (upload, versions) · serve.js (/s/ from R2) · db.js (site index) · auth.js · util.js
+  index.js (routes) · sites.js (upload, versions) · serve.js (/s/ serving) · db.js (D1/KV helpers) · auth.js · util.js
+migrations/            D1 database schema
 cli/sitebox.js         the push CLI
 lib/                   zip reader/writer + file helpers used by the CLI
 sites/builders-quest/  Builder's Quest source (push with `npm run push:quest`)
   css/  tokens · base · scene · header · quest · dialog · responsive
   js/   main · state · storage · quest · picker · theme · scene · data/levels · data/types
-wrangler.toml          Worker, R2 bucket and settings
+wrangler.toml          Worker, D1, KV and settings
 ```
 
 ## How it works
 
-- **Storage (R2):** `db.json` is the index of sites and versions. Files live at `f/<site>/<version>/<path>`, and each version has a file list at `m/<site>/<version>.json`. Old versions beyond `MAX_VERSIONS` (10) are deleted automatically.
-- **Uploads** happen file by file: the client declares the files, sends each one, then commits. The Worker never unzips anything (the CLI and the app do), so each request stays well inside the free plan's CPU limit. A version only goes live once every file has arrived. A daily job clears out uploads that were started but never finished.
+- **Index (D1):** tables for sites, versions, and which content each file path points to.
+- **Contents (KV):** stored once per unique SHA-256 (`b/<hash>`), shared across files, versions and sites. Unchanged files are never re-uploaded or re-stored, so a push usually writes only what you edited.
+- **Uploads:** the client declares every file with its hash. The server replies with the hashes it's missing, the client sends just those, then commits. A version only goes live once everything has arrived. The Worker never unzips (the CLI and the app do), so each request fits the free plan's CPU limit.
+- **Cleanup:** history is trimmed to `MAX_VERSIONS`. A daily job removes unfinished uploads and contents nothing uses any more.
+- **Free plan limits that matter:** 1 GB of KV storage, 1,000 KV writes a day (one per *new* file content), 25 MB per file.
 - **Single-file shortcut:** `curl -X PUT -H "Authorization: Bearer <token>" --data-binary @page.html <url>/api/sites/my-page`
 
 ## Settings (`wrangler.toml` → `[vars]`)
@@ -94,5 +96,6 @@ wrangler.toml          Worker, R2 bucket and settings
 |---|---|---|
 | `PUBLIC_READ` | `"false"` | `"true"` = anyone with a link can view |
 | `MAX_VERSIONS` | `"10"` | versions kept per site |
-| `MAX_UPLOAD_MB` | `"200"` | total size of one push (each single file is also limited to 100 MB by Cloudflare) |
+| `MAX_UPLOAD_MB` | `"200"` | total size of one push |
+| `MAX_FILE_MB` | `"25"` | largest single file (KV's limit) |
 | `SITEBOX_TOKEN` | secret | set with `npx wrangler secret put SITEBOX_TOKEN` |

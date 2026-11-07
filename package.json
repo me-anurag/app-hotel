@@ -1,7 +1,7 @@
 {
   "name": "sitebox",
   "version": "1.0.0",
-  "description": "A PWA library for your websites on Cloudflare Workers + R2: upload HTML/folders/zips or push from VS Code, open them anywhere, even offline.",
+  "description": "A PWA library for your websites on Cloudflare Workers (free plan: D1 + KV): upload HTML/folders/zips or push from VS Code, open them anywhere, even offline.",
   "license": "MIT",
   "private": true,
   "bin": {
@@ -10,10 +10,11 @@
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
-    "setup": "wrangler r2 bucket create sitebox && wrangler secret put SITEBOX_TOKEN",
+    "setup": "wrangler d1 migrations apply sitebox --remote && wrangler secret put SITEBOX_TOKEN",
     "seed": "node cli/sitebox.js push sites/builders-quest -n builders-quest -m \"Bundled site\"",
     "push:quest": "node cli/sitebox.js push sites/builders-quest -n builders-quest -m \"Update Builder's Quest\"",
-    "icons": "node tools/make-icons.js"
+    "icons": "node tools/make-icons.js",
+    "db:local": "wrangler d1 migrations apply sitebox --local"
   },
   "engines": {
     "node": ">=18"

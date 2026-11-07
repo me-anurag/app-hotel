@@ -70,6 +70,11 @@ export async function request(method, path, { body, type, retried } = {}) {
 
 const enc = (p) => p.split("/").map(encodeURIComponent).join("/");
 
+async function sha256(blob) {
+  const d = new Uint8Array(await crypto.subtle.digest("SHA-256", await blob.arrayBuffer()));
+  return Array.from(d, (b) => b.toString(16).padStart(2, "0")).join("");
+}
+
 export const api = {
   ping: () => fetch("/api/ping", { cache: "no-store", headers: getToken() ? { Authorization: `Bearer ${getToken()}` } : {} })
     .then((r) => (r.ok ? r.json() : null)),
@@ -81,17 +86,20 @@ export const api = {
    * @param {{path: string, file: Blob}[]} entries
    */
   async upload(slug, entries, { title, message, onProgress = () => {} }) {
+    const hashed = await Promise.all(entries.map(async (e) => ({ ...e, hash: await sha256(e.file) })));
     const begin = await request("POST", `/api/sites/${slug}/uploads`, {
       type: "application/json",
-      body: JSON.stringify({ files: entries.map((e) => ({ path: e.path, size: e.file.size })), title, message, source: "app" }),
+      body: JSON.stringify({ files: hashed.map((e) => ({ path: e.path, size: e.file.size, hash: e.hash })), title, message, source: "app" }),
     });
-    const jobs = entries.map((e, i) => ({ file: e.file, path: begin.paths[i] })).filter((j) => j.path);
+    // Only contents the server doesn't already have are sent.
+    const byHash = new Map(hashed.map((e) => [e.hash, e.file]));
+    const jobs = begin.missing.map((hash) => ({ hash, file: byHash.get(hash) }));
     const total = jobs.reduce((s, j) => s + j.file.size, 0) || 1;
     let sent = 0, next = 0;
     const lane = async () => {
       while (next < jobs.length) {
         const j = jobs[next++];
-        await request("PUT", `/api/sites/${slug}/uploads/${begin.version}/${enc(j.path)}`, { body: j.file, type: "application/octet-stream" });
+        await request("PUT", `/api/sites/${slug}/uploads/${begin.version}/blobs/${j.hash}`, { body: j.file, type: "application/octet-stream" });
         sent += j.file.size;
         onProgress(sent / total);
       }
