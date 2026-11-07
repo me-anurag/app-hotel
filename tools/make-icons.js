@@ -9,7 +9,7 @@ const OUT = path.join(__dirname, "..", "app", "icons");
 fs.mkdirSync(OUT, { recursive: true });
 
 const hex = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
-const C = { bgA: hex("#2f6b22"), bgB: hex("#6aa84c"), win: hex("#ffffff"), band: hex("#e3efd8"), dot: hex("#4c8a37"), line: hex("#cfe0c2") };
+const C = { bg: hex("#0c0d0b"), ink: hex("#ecebe3"), lime: hex("#d4ff3a") };
 
 // Signed distance to a rounded rectangle centred at (cx,cy) with half-size (hx,hy) and radius r.
 function sdRoundRect(x, y, cx, cy, hx, hy, r) {
@@ -20,21 +20,16 @@ function sdRoundRect(x, y, cx, cy, hx, hy, r) {
 /** Colour at unit coords (x,y) or null for transparent. */
 function sample(x, y, maskable) {
   if (!maskable && sdRoundRect(x, y, .5, .5, .5, .5, .22) > 0) return null;
-  const t = (x + y) / 2;
-  let col = C.bgA.map((a, i) => a + (C.bgB[i] - a) * (1 - t));
 
-  // Glyph: a browser window holding page lines. Shrunk for the maskable safe zone.
-  const k = maskable ? .78 : 1;
-  const gx = (x - .5) / k + .5, gy = (y - .5) / k + .5;
-  if (sdRoundRect(gx, gy, .5, .53, .31, .25, .06) <= 0) {
-    col = C.win;
-    if (gy < .39) col = C.band;
-    for (const dx of [.28, .345, .41]) if (Math.hypot(gx - dx, gy - .335) < .022) col = C.dot;
-    for (const [cy, hw, cx] of [[.49, .2, .5], [.585, .13, .43], [.68, .17, .47]]) {
-      if (sdRoundRect(gx, gy, cx, cy, hw, .022, .022) <= 0) col = C.line;
-    }
-  }
-  return col;
+  // Glyph (same geometry as the 30-unit logo SVG): an outlined box with a lime box overlapping
+  // its corner. Shrunk for the maskable safe zone.
+  const span = maskable ? .46 : .58, s = 30 / span;
+  const gx = (x - .5) * s + 15, gy = (y - .5) * s + 15;
+  const fill = sdRoundRect(gx, gy, 20.75, 20.75, 7.75, 7.75, 4.5);
+  if (fill <= 0) return C.lime;
+  if (fill <= 1.7) return C.bg;                                   // gap around the lime box
+  if (Math.abs(sdRoundRect(gx, gy, 12.5, 12.5, 11, 11, 6)) <= 1.2) return C.ink;
+  return C.bg;
 }
 
 function render(size, maskable) {

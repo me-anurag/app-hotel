@@ -5,7 +5,7 @@
    - Third-party assets used by sites (fonts, CDNs): stale-while-revalidate.
    - Share target: files shared to the installed app are stashed and handed to the upload dialog. */
 
-const VERSION = "v3";
+const VERSION = "v4";
 const SHELL = `sitebox-shell-${VERSION}`;
 const API = "sitebox-api";
 const CDN = "sitebox-cdn";

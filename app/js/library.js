@@ -14,10 +14,12 @@ function cardHtml(s, i) {
     <a class="card-link" href="#/view/${encodeURIComponent(s.slug)}" aria-label="Open ${esc(s.title)}">
       <div class="thumb"><span class="letter">${letter}</span>
         ${state.online ? `<iframe src="${esc(s.url)}" loading="lazy" tabindex="-1" aria-hidden="true" scrolling="no"></iframe>` : ""}
+        <span class="idx">${String(i + 1).padStart(2, "0")}</span>
+        <span class="go" aria-hidden="true"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M8 7h9v9"/></svg></span>
       </div>
       <div class="card-body">
         <div class="card-title">${esc(s.title || s.slug)}</div>
-        <div class="card-meta"><span class="v">v${s.current}</span><span>${timeAgo(s.updatedAt)}</span><span class="size">· ${fmtBytes(s.bytes)}</span></div>
+        <div class="card-meta"><span class="v">v${s.current}</span><span>${timeAgo(s.updatedAt)}</span><span class="size">${fmtBytes(s.bytes)}</span></div>
       </div>
     </a>
     <button class="icon-btn more" data-details="${esc(s.slug)}" aria-label="Details for ${esc(s.title)}" title="Details and history">
@@ -31,10 +33,10 @@ function emptyHtml() {
     return `<h2>Can't load your sites</h2><p>${esc(state.error)}</p>
       <div class="row"><button class="btn" data-action="retry">Try again</button></div>`;
   }
-  if (query) return `<h2>No matches</h2><p>Nothing matches “${esc(query)}”.</p>`;
-  return `<img src="/icons/icon.svg" width="64" height="64" alt="">
-    <h2>Your Sitebox is empty</h2>
-    <p>Upload an HTML file, a folder or a .zip, or push straight from VS Code.</p>
+  if (query) return `<h2>No matches</h2><p>Nothing is called “${esc(query)}”.</p>`;
+  return `<div class="box" aria-hidden="true"></div>
+    <h2>Nothing here yet</h2>
+    <p>Upload an HTML file, a folder or a zip, or push one from VS Code.</p>
     <div class="row"><button class="btn primary" data-action="upload">Upload a site</button>
     <button class="btn" data-action="push">Push from VS Code</button></div>`;
 }
@@ -46,7 +48,8 @@ function render() {
 
   // Avoid reloading every thumbnail iframe when nothing visible changed.
   const key = JSON.stringify([q, state.online, list.map((s) => [s.slug, s.current, s.title, s.updatedAt])]);
-  $("#count").textContent = state.loaded ? `${state.sites.length} site${state.sites.length === 1 ? "" : "s"}` : "";
+  const n = state.sites.length;
+  $("#count").textContent = state.loaded ? `${String(n).padStart(2, "0")} ${n === 1 ? "site" : "sites"}` : "";
   if (key === lastKey) return;
   lastKey = key;
 

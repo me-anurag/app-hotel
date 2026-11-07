@@ -5,14 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Sitebox</title>
 <meta name="description" content="Your pocket library of websites. Upload HTML or push from VS Code, open them anywhere, even offline.">
-<meta name="theme-color" content="#f4f6f0" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#101512" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#efede5" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0c0d0b" media="(prefers-color-scheme: dark)">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="/icons/icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/app.css">
 <script type="module" src="/js/main.js"></script>
 </head>
@@ -23,8 +26,8 @@
   <header class="appbar">
     <div class="wrap appbar-row">
       <a class="logo" href="#/" aria-label="Sitebox home">
-        <img src="/icons/icon.svg" width="28" height="28" alt="">
-        <span>Sitebox</span>
+        <svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><rect x="1.5" y="1.5" width="22" height="22" rx="6" fill="none" stroke="currentColor" stroke-width="2.4"/><rect x="11.3" y="11.3" width="18.9" height="18.9" rx="6.2" fill="var(--bg)"/><rect x="13" y="13" width="15.5" height="15.5" rx="4.5" fill="var(--accent)"/></svg>
+        <span>sitebox</span>
       </a>
       <span class="status" id="status" title="Connection to your Sitebox server"><i></i><span>Online</span></span>
       <div class="spacer"></div>
@@ -40,13 +43,17 @@
   </header>
 
   <main class="wrap">
-    <div class="toolbar">
+    <div class="lib-head">
+      <div>
+        <p class="eyebrow">Your collection</p>
+        <h1>Library <span class="count" id="count"></span></h1>
+      </div>
       <div class="search">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-        <input id="search" type="search" placeholder="Search sites" autocomplete="off" aria-label="Search sites">
+        <input id="search" type="search" placeholder="Search by name or title" autocomplete="off" aria-label="Search sites">
       </div>
-      <span class="count" id="count"></span>
     </div>
+    <div class="rule"></div>
     <div id="grid" class="grid" aria-live="polite"></div>
     <div id="empty" class="empty" hidden></div>
   </main>
@@ -74,11 +81,11 @@
 
 <!-- ============ Upload dialog ============ -->
 <dialog id="dlg-upload" class="sheet">
-  <form method="dialog" class="sheet-head"><h2>Upload a site</h2><button class="icon-btn" aria-label="Close">✕</button></form>
+  <form method="dialog" class="sheet-head"><h2>Upload a site</h2><button class="icon-btn" aria-label="Close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></form>
   <div class="sheet-body">
     <div class="drop" id="drop" tabindex="0">
       <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3M7 8l5-5 5 5"/><path d="M20 15v3a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3v-3"/></svg>
-      <p><b>Drop an HTML file, a folder, or a .zip</b><br><span>or choose one</span></p>
+      <p><b>Drop a file, folder or zip</b><span>or pick one below</span></p>
       <div class="drop-actions">
         <label class="btn small">HTML file(s)<input type="file" id="pick-files" accept=".html,.htm,.css,.js,.json,.svg,.png,.jpg,.jpeg,.gif,.webp,.ico,.woff,.woff2" multiple hidden></label>
         <label class="btn small">Folder<input type="file" id="pick-folder" webkitdirectory multiple hidden></label>
@@ -105,19 +112,19 @@
 
 <!-- ============ Details dialog ============ -->
 <dialog id="dlg-details" class="sheet">
-  <form method="dialog" class="sheet-head"><h2 id="d-title">Site</h2><button class="icon-btn" aria-label="Close">✕</button></form>
+  <form method="dialog" class="sheet-head"><h2 id="d-title">Site</h2><button class="icon-btn" aria-label="Close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></form>
   <div class="sheet-body" id="d-body"></div>
 </dialog>
 
 <!-- ============ Push-from-VS-Code dialog ============ -->
 <dialog id="dlg-push" class="sheet">
-  <form method="dialog" class="sheet-head"><h2>Push from VS Code</h2><button class="icon-btn" aria-label="Close">✕</button></form>
+  <form method="dialog" class="sheet-head"><h2>Push from VS Code</h2><button class="icon-btn" aria-label="Close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></form>
   <div class="sheet-body prose" id="push-body"></div>
 </dialog>
 
 <!-- ============ Token dialog ============ -->
 <dialog id="dlg-token" class="sheet narrow">
-  <form method="dialog" class="sheet-head"><h2>Enter your token</h2><button class="icon-btn" value="cancel" aria-label="Close">✕</button></form>
+  <form method="dialog" class="sheet-head"><h2>Enter your token</h2><button class="icon-btn" value="cancel" aria-label="Close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></form>
   <form class="sheet-body" id="token-form">
     <p class="muted">Your Sitebox is private. Enter the token you set with <code>wrangler secret put SITEBOX_TOKEN</code>. It's remembered on this device.</p>
     <label class="field"><span>Token</span><input id="f-token" type="password" placeholder="Paste your token" required autocomplete="current-password" spellcheck="false"></label>
