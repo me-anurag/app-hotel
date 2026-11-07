@@ -13,7 +13,15 @@ export const state = {
   done: storage.get(doneKey(initialType), {}),
   open: new Set(),   // level numbers opened manually; "x<n>" = closed manually
   lastId: null,      // id ticked in the last change, for the pop animation
+  showTools: storage.get("bq-tools", false),   // "Show all tools" toggle
+  openTools: new Set(),                        // task ids whose tool list is open
 };
+
+export function setShowTools(on) {
+  state.showTools = on;
+  storage.set("bq-tools", on);
+  if (!on) state.openTools.clear();
+}
 
 export const currentType = () => TYPES.find((t) => t.id === state.typeId);
 

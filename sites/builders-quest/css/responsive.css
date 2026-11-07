@@ -5,7 +5,8 @@
   .moon::before{width:10px;height:10px;left:22px;top:9px}.moon::after{width:6px;height:6px;left:11px;top:24px;box-shadow:14px 4px 0 -1px rgba(170,160,120,.24)}
   .hero h1{padding-right:56px}.hero .sub{padding-right:0}
   .hero{padding-top:36px;padding-bottom:180px}
-  .hills{height:180px}
+  .hills,.grass{height:180px}
+  .grassimg{height:200px}.scene.painted .hero{padding-bottom:200px}
   .brand span{display:none}.brand{padding:6px 8px}
   .lhead{padding:12px}.lbody{padding:0 12px 14px}.typecard{padding:14px}
 }

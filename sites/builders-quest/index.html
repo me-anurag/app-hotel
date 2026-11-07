@@ -27,11 +27,9 @@
     <path d="M0 100 C220 42 430 58 720 90 C1000 120 1210 46 1440 74 L1440 210 L0 210Z" fill="var(--hill-1)"/>
     <path d="M0 138 C260 96 520 116 780 132 C1040 148 1240 104 1440 122 L1440 210 L0 210Z" fill="var(--hill-2)"/>
     <path d="M0 168 C320 146 640 176 960 160 C1160 150 1320 164 1440 158 L1440 210 L0 210Z" fill="var(--hill-3)"/>
-    <g class="sway s1" id="s1" fill="var(--blade)"></g>
-    <g class="sway s2" id="s2" fill="var(--blade)"></g>
-    <g class="sway s3" id="s3" fill="var(--blade)"></g>
-    <path d="M0 198 C360 190 720 204 1080 194 C1250 190 1360 196 1440 194 L1440 210 L0 210Z" fill="var(--bg)"/>
   </svg>
+  <canvas class="grass" id="grass" aria-hidden="true"></canvas>
+  <canvas class="grassimg" id="grassimg" aria-hidden="true"></canvas>
   <div class="flies" id="flies"></div>
 
   <div class="wrap topbar">
@@ -64,9 +62,10 @@
   <div id="levels" class="intro"></div>
   <div class="row" style="justify-content:center;margin-top:18px">
     <button class="btn ghost" id="openall">Expand all</button>
+    <button class="btn ghost" id="alltools" aria-pressed="false">Show all tools</button>
     <button class="btn ghost" id="reset">Reset this quest</button>
   </div>
-  <footer>Progress is saved in this browser, separately for each product type.<br>Laws named here are pointers, not legal advice. Confirm the details for each market you launch in.</footer>
+  <footer>Progress is saved in this browser, separately for each product type.<br>Laws named here are pointers, not legal advice. Confirm the details for each market you launch in.<br>Tools are common options, not endorsements. Prices and free tiers change, so check before you commit. Pick one and move on rather than comparing ten.</footer>
 </main>
 
 <dialog id="dlg">

@@ -31,7 +31,22 @@ main.wrap{padding-bottom:80px}
 .level.open .chev{transform:rotate(90deg)}
 .lbody{display:none;padding:0 16px 16px}
 .level.open .lbody{display:block}
-.item{display:flex;gap:10px;align-items:flex-start;padding:8px 2px;border-top:1px solid var(--line);cursor:pointer}
+.item{display:flex;gap:10px;align-items:flex-start;padding:8px 2px;border-top:1px solid var(--line)}
+.ibody{flex:1;min-width:0}
+.item .txt{cursor:pointer;display:block}
+.item.skipped .txt{cursor:default}
+/* Per-task tool suggestions */
+.tbtn{margin-top:6px;display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:var(--muted);background:transparent;border:1px solid var(--line);border-radius:999px;padding:2px 9px;transition:color .2s,border-color .2s,background-color .2s}
+.tbtn:hover,.tbtn.on{color:var(--grass);border-color:var(--grass)}
+.tbtn.on{background:var(--grass-soft)}
+.tbtn:focus-visible,.tchip:focus-visible{outline:2px solid var(--grass);outline-offset:2px}
+.tools{display:none;flex-wrap:wrap;gap:6px;margin-top:8px}
+.tools.show{display:flex;animation:rise .3s both}
+.tchip{font-size:13px;color:var(--ink);text-decoration:none;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:3px 9px;display:inline-flex;align-items:center;gap:6px;transition:border-color .2s,transform .2s}
+a.tchip:hover{border-color:var(--grass);transform:translateY(-1px)}
+a.tchip::after{content:"↗";font-size:11px;color:var(--muted)}
+.tchip.plain{color:var(--muted)}
+.oss{font-size:10px;font-weight:600;color:var(--grass);background:var(--grass-soft);border-radius:999px;padding:0 6px}
 .item:first-child{border-top:0}
 .item input{appearance:none;width:19px;height:19px;border:1.5px solid var(--grass-2);border-radius:6px;margin:2px 0 0;flex:none;cursor:pointer;display:grid;place-items:center;background:var(--card-solid);transition:background-color .2s,border-color .2s}
 .item input:checked{background:var(--grass);border-color:var(--grass)}

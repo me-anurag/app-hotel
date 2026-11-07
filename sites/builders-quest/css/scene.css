@@ -35,12 +35,14 @@
 
 .hills{position:absolute;left:0;right:0;bottom:0;width:100%;height:210px;display:block;z-index:-1}
 .hills path,.hills circle{transition:fill 1s}
-.sway{transform-box:fill-box;transform-origin:50% 100%;animation:sway 5s ease-in-out infinite alternate}
-.sway.s2{animation-duration:6.4s;animation-delay:-2s}
-.sway.s3{animation-duration:7.6s;animation-delay:-4s}
-@keyframes sway{from{transform:skewX(-4deg)}to{transform:skewX(4deg)}}
+/* Grass: a canvas-drawn meadow, replaced by the WebGL painted grass once its images load */
+.grass{position:absolute;left:0;bottom:0;width:100%;height:210px;display:block;z-index:-1}
+.grassimg{position:absolute;left:0;bottom:0;width:100%;height:250px;display:block;z-index:-1;opacity:0;transition:opacity .8s}
+.scene.painted .grassimg{opacity:1}
+.scene.painted .grass{opacity:0;transition:opacity .8s}
+.scene.painted .hero{padding-bottom:250px}
 
 .flies{position:absolute;left:0;right:0;bottom:0;height:260px;z-index:0;opacity:var(--night);transition:opacity 1.4s;pointer-events:none}
-.fly{position:absolute;width:5px;height:5px;border-radius:50%;background:#e9ff9a;box-shadow:0 0 8px 3px rgba(214,255,120,.65);animation:wander var(--d,9s) ease-in-out infinite alternate,blink var(--b,3s) ease-in-out infinite;animation-delay:var(--dl,0s),var(--dl,0s)}
+.fly{position:absolute;width:4px;height:4px;border-radius:50%;background:#f1ffb8;box-shadow:0 0 10px 4px rgba(214,255,140,.45);animation:wander var(--d,9s) ease-in-out infinite alternate,blink var(--b,3s) ease-in-out infinite;animation-delay:var(--dl,0s),var(--dl,0s)}
 @keyframes wander{from{transform:translate(0,0)}to{transform:translate(var(--dx,30px),var(--dy,-30px))}}
-@keyframes blink{0%,100%{opacity:.15}50%{opacity:1}}
+@keyframes blink{0%,100%{opacity:.08}50%{opacity:.9}}
