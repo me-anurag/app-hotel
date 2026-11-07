@@ -1,0 +1,61 @@
+/* Quest content: type card, trail, levels, tasks, gates, victory */
+main.wrap{padding-bottom:80px}
+.typecard{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px 18px;margin:-6px 0 20px;box-shadow:var(--shadow);transition:background-color .9s,border-color .9s;animation:rise .7s .25s both}
+.typecard .label{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.typecard h2{font-family:Fraunces,Georgia,serif;font-weight:600;font-size:22px;margin:2px 0 8px}
+.risk{background:var(--wheat-soft);border-radius:10px;padding:10px 12px;font-size:14px;margin-top:12px;transition:background-color .9s}
+.risk b{color:var(--wheat)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.trail{display:flex;gap:3px;margin:22px 0 6px}
+.stone{flex:1;height:7px;border-radius:4px;background:var(--line);transition:background .6s}
+.stone.done{background:var(--grass)}
+.stone.now{background:linear-gradient(90deg,var(--grass) var(--p,0%),var(--line) var(--p,0%))}
+.trailmeta{display:flex;justify-content:space-between;color:var(--muted);font-size:13px;margin-bottom:22px}
+.side{border:1px dashed var(--grass-2);border-radius:14px;padding:12px 14px;font-size:14px;color:var(--muted);margin-bottom:22px}
+.side b{color:var(--ink)}
+
+.level{background:var(--card);border:1px solid var(--line);border-radius:16px;margin-bottom:12px;overflow:hidden;box-shadow:var(--shadow);transition:border-color .3s,background-color .9s,opacity .3s}
+.intro .level{animation:rise .5s both;animation-delay:calc(var(--i) * 45ms + .3s)}
+.level.active{border-color:var(--grass)}
+.level.locked{opacity:.6}
+.level.justcleared{animation:cleared 1.2s ease-out}
+@keyframes cleared{0%{box-shadow:0 0 0 0 rgba(143,208,106,.0)}30%{box-shadow:0 0 0 8px rgba(143,208,106,.35)}100%{box-shadow:0 0 0 14px rgba(143,208,106,0)}}
+.lhead{display:flex;align-items:center;gap:12px;padding:14px 16px;width:100%;background:none;border:0;color:inherit;text-align:left}
+.badge{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:600;font-size:14px;flex:none;background:var(--grass-soft);color:var(--grass);transition:background-color .4s,color .4s}
+.level.cleared .badge{background:var(--grass);color:var(--card-solid)}
+.level.locked .badge{background:var(--line);color:var(--lock)}
+.lt{flex:1;min-width:0}
+.lt .name{font-weight:600}
+.lt .meta{font-size:13px;color:var(--muted)}
+.chev{color:var(--muted);transition:transform .25s;flex:none}
+.level.open .chev{transform:rotate(90deg)}
+.lbody{display:none;padding:0 16px 16px}
+.level.open .lbody{display:block}
+.item{display:flex;gap:10px;align-items:flex-start;padding:8px 2px;border-top:1px solid var(--line);cursor:pointer}
+.item:first-child{border-top:0}
+.item input{appearance:none;width:19px;height:19px;border:1.5px solid var(--grass-2);border-radius:6px;margin:2px 0 0;flex:none;cursor:pointer;display:grid;place-items:center;background:var(--card-solid);transition:background-color .2s,border-color .2s}
+.item input:checked{background:var(--grass);border-color:var(--grass)}
+.item input:checked::after{content:"";width:5px;height:9px;border:solid var(--card-solid);border-width:0 2px 2px 0;transform:rotate(45deg) translate(-1px,-1px)}
+.item input:disabled{cursor:not-allowed;border-color:var(--lock)}
+.item.pop input{animation:pop .4s ease-out}
+@keyframes pop{0%{transform:scale(.6)}55%{transform:scale(1.25)}100%{transform:scale(1)}}
+.item.checked .txt{color:var(--muted);text-decoration:line-through;text-decoration-color:var(--line)}
+.item.skipped{opacity:.5;cursor:default}
+.item.skipped .txt{text-decoration:line-through}
+.tag{font-size:11px;font-weight:600;padding:1px 7px;border-radius:999px;margin-left:6px;white-space:nowrap;vertical-align:1px}
+.tag.type{background:var(--grass-soft);color:var(--grass)}
+.tag.skip{background:var(--line);color:var(--muted)}
+.gate{margin-top:12px;background:var(--wheat-soft);border-radius:12px;padding:12px 14px;transition:background-color .9s}
+.gate .gh{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--wheat);font-weight:600;margin-bottom:6px}
+.gate .item{border:0;padding:4px 0}
+.gate .item input{border-color:var(--wheat)}
+.gate .item input:checked{background:var(--wheat);border-color:var(--wheat)}
+.gate .extra{font-size:14px;margin:4px 0 0 29px}
+.fail{font-size:13px;color:var(--muted);margin:6px 0 0 29px}
+.hint{font-size:13px;color:var(--muted);margin:8px 0 0 29px;font-style:italic}
+.victory{display:none;text-align:center;background:var(--card);border:1px solid var(--wheat);border-radius:18px;padding:28px 18px;margin:18px 0;box-shadow:var(--shadow)}
+.victory.show{display:block;animation:rise .7s both}
+.victory .flag{font-size:36px;display:inline-block;animation:bob 2.4s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-6px) rotate(4deg)}}
+.victory h3{font-family:Fraunces,Georgia,serif;font-size:28px;margin:6px 0}
+.victory p{color:var(--muted);margin:0}

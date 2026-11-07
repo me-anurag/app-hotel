@@ -1,0 +1,31 @@
+# Sitebox on Cloudflare Workers + R2.
+# First deploy:  see README "Deploy to Cloudflare".
+name = "sitebox"
+main = "worker/src/index.js"
+compatibility_date = "2025-09-01"
+
+# The PWA shell. The Worker runs first so it can handle /api/* and /s/*,
+# and hands everything else to these static files.
+[assets]
+directory = "./app"
+binding = "ASSETS"
+not_found_handling = "single-page-application"
+run_worker_first = true
+
+# Where sites are stored. Create it once: npx wrangler r2 bucket create sitebox
+[[r2_buckets]]
+binding = "BUCKET"
+bucket_name = "sitebox"
+
+[vars]
+# "true" lets anyone with a link view the library and sites. Uploads always need the token.
+PUBLIC_READ = "false"
+MAX_VERSIONS = "10"
+MAX_UPLOAD_MB = "200"
+
+# Daily sweep of uploads that were started but never finished.
+[triggers]
+crons = ["17 3 * * *"]
+
+# The write token is a secret, not a var:  npx wrangler secret put SITEBOX_TOKEN
+# For local `wrangler dev`, put SITEBOX_TOKEN=... in a .dev.vars file.

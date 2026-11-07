@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sitebox</title>
+<meta name="description" content="Your pocket library of websites. Upload HTML or push from VS Code, open them anywhere, even offline.">
+<meta name="theme-color" content="#f4f6f0" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#101512" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="stylesheet" href="/css/app.css">
+<script type="module" src="/js/main.js"></script>
+</head>
+<body>
+
+<!-- ============ Library ============ -->
+<div id="library" class="screen">
+  <header class="appbar">
+    <div class="wrap appbar-row">
+      <a class="logo" href="#/" aria-label="Sitebox home">
+        <img src="/icons/icon.svg" width="28" height="28" alt="">
+        <span>Sitebox</span>
+      </a>
+      <span class="status" id="status" title="Connection to your Sitebox server"><i></i><span>Online</span></span>
+      <div class="spacer"></div>
+      <button class="btn ghost hide-sm" id="btn-push-help">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m8 9-4 3 4 3M16 9l4 3-4 3M13.5 6l-3 12"/></svg>
+        Push from VS Code
+      </button>
+      <button class="btn primary" id="btn-upload">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M6 10l6-6 6 6M4 20h16"/></svg>
+        Upload
+      </button>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="toolbar">
+      <div class="search">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="search" type="search" placeholder="Search sites" autocomplete="off" aria-label="Search sites">
+      </div>
+      <span class="count" id="count"></span>
+    </div>
+    <div id="grid" class="grid" aria-live="polite"></div>
+    <div id="empty" class="empty" hidden></div>
+  </main>
+</div>
+
+<!-- ============ Viewer ============ -->
+<div id="viewer" class="viewer" hidden>
+  <div class="viewer-bar">
+    <a class="icon-btn" href="#/" aria-label="Back to library" title="Back">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+    </a>
+    <div class="viewer-title"><b id="v-title"></b><span id="v-meta"></span></div>
+    <button class="icon-btn" id="v-reload" aria-label="Reload" title="Reload">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/></svg>
+    </button>
+    <a class="icon-btn" id="v-external" target="_blank" rel="noopener" aria-label="Open in new tab" title="Open in new tab">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>
+    </a>
+    <button class="icon-btn" id="v-details" aria-label="Site details" title="Details and history">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
+    </button>
+  </div>
+  <iframe id="v-frame" title="Site" allow="clipboard-write; fullscreen; autoplay; camera; microphone; geolocation"></iframe>
+</div>
+
+<!-- ============ Upload dialog ============ -->
+<dialog id="dlg-upload" class="sheet">
+  <form method="dialog" class="sheet-head"><h2>Upload a site</h2><button class="icon-btn" aria-label="Close">✕</button></form>
+  <div class="sheet-body">
+    <div class="drop" id="drop" tabindex="0">
+      <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3M7 8l5-5 5 5"/><path d="M20 15v3a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3v-3"/></svg>
+      <p><b>Drop an HTML file, a folder, or a .zip</b><br><span>or choose one</span></p>
+      <div class="drop-actions">
+        <label class="btn small">HTML file(s)<input type="file" id="pick-files" accept=".html,.htm,.css,.js,.json,.svg,.png,.jpg,.jpeg,.gif,.webp,.ico,.woff,.woff2" multiple hidden></label>
+        <label class="btn small">Folder<input type="file" id="pick-folder" webkitdirectory multiple hidden></label>
+        <label class="btn small">.zip<input type="file" id="pick-zip" accept=".zip,application/zip" hidden></label>
+      </div>
+    </div>
+
+    <form id="upload-form" class="upload-form" hidden>
+      <div class="picked" id="picked"></div>
+      <label class="field"><span>Site name</span>
+        <input id="f-slug" required pattern="[a-z0-9][a-z0-9\-]{0,62}" autocomplete="off" spellcheck="false">
+        <small id="f-slug-hint">Lowercase letters, digits and dashes. Becomes the address /s/<i>name</i>/</small>
+      </label>
+      <label class="field"><span>Title <em>optional</em></span><input id="f-title" placeholder="Taken from the page's &lt;title&gt;"></label>
+      <label class="field"><span>Note <em>optional</em></span><input id="f-message" placeholder="What changed?"></label>
+      <div class="progress" id="progress" hidden><i></i></div>
+      <div class="form-actions">
+        <button type="button" class="btn ghost" id="upload-reset">Choose something else</button>
+        <button type="submit" class="btn primary" id="upload-go">Upload</button>
+      </div>
+    </form>
+  </div>
+</dialog>
+
+<!-- ============ Details dialog ============ -->
+<dialog id="dlg-details" class="sheet">
+  <form method="dialog" class="sheet-head"><h2 id="d-title">Site</h2><button class="icon-btn" aria-label="Close">✕</button></form>
+  <div class="sheet-body" id="d-body"></div>
+</dialog>
+
+<!-- ============ Push-from-VS-Code dialog ============ -->
+<dialog id="dlg-push" class="sheet">
+  <form method="dialog" class="sheet-head"><h2>Push from VS Code</h2><button class="icon-btn" aria-label="Close">✕</button></form>
+  <div class="sheet-body prose" id="push-body"></div>
+</dialog>
+
+<!-- ============ Token dialog ============ -->
+<dialog id="dlg-token" class="sheet narrow">
+  <form method="dialog" class="sheet-head"><h2>Enter your token</h2><button class="icon-btn" value="cancel" aria-label="Close">✕</button></form>
+  <form class="sheet-body" id="token-form">
+    <p class="muted">Your Sitebox is private. Enter the token you set with <code>wrangler secret put SITEBOX_TOKEN</code>. It's remembered on this device.</p>
+    <label class="field"><span>Token</span><input id="f-token" type="password" placeholder="Paste your token" required autocomplete="current-password" spellcheck="false"></label>
+    <p class="token-error" id="token-error" hidden></p>
+    <div class="form-actions"><button class="btn primary">Save</button></div>
+  </form>
+</dialog>
+
+<div class="toasts" id="toasts" aria-live="polite"></div>
+</body>
+</html>

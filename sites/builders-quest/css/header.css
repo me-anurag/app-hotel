@@ -1,0 +1,18 @@
+/* Top bar, day/night toggle and hero text */
+.topbar{display:flex;justify-content:space-between;align-items:center;padding-top:16px;position:relative;z-index:2}
+.brand{display:flex;align-items:center;gap:8px;font-weight:600;font-size:14px;color:var(--ink);background:var(--glass);border:1px solid var(--glass-line);padding:6px 12px 6px 8px;border-radius:999px;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);transition:background-color .9s,border-color .9s,color .9s}
+.brand svg{color:var(--grass)}
+.toggle{display:inline-flex;align-items:center;gap:10px;background:var(--glass);border:1px solid var(--glass-line);color:var(--ink);padding:5px 6px 5px 14px;border-radius:999px;font-weight:600;font-size:14px;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);box-shadow:var(--shadow);transition:background-color .9s,border-color .9s,color .9s}
+.toggle:hover{border-color:var(--grass)}
+.track{position:relative;width:50px;height:28px;border-radius:999px;background:linear-gradient(90deg,#8ccdf0,#c6e8f6);overflow:hidden}
+.track::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,#0b1430,#1e3358);opacity:var(--night);transition:opacity .9s}
+.knob{position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.25);transform:translateX(calc(var(--night) * 22px));transition:transform .6s cubic-bezier(.6,0,.3,1);display:grid;place-items:center}
+.knob svg{position:absolute;transition:opacity .5s,transform .6s}
+.knob .i-sun{opacity:calc(1 - var(--night));transform:rotate(calc(var(--night) * 90deg))}
+.knob .i-moon{opacity:var(--night)}
+
+.hero{padding-top:44px;padding-bottom:210px;position:relative;z-index:1}
+h1{font-family:Fraunces,Georgia,serif;font-weight:600;font-size:clamp(30px,6vw,46px);line-height:1.08;letter-spacing:-.02em;margin:0 0 10px;animation:rise .8s both}
+.sub{color:var(--muted);margin:0 0 22px;max-width:500px;animation:rise .8s .1s both;transition:color .9s}
+.hero .btn{animation:rise .8s .2s both}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}

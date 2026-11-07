@@ -1,0 +1,12 @@
+/* Product-type picker dialog */
+dialog{border:1px solid var(--line);border-radius:18px;padding:0;background:var(--card-solid);color:var(--ink);width:min(680px,calc(100% - 24px));max-height:86vh;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+dialog[open]{animation:rise .3s both}
+dialog::backdrop{background:rgba(10,20,14,.5);backdrop-filter:blur(3px)}
+.dh{position:sticky;top:0;background:var(--card-solid);padding:16px 18px 10px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:8px;z-index:1}
+.dh h3{margin:0;font-family:Fraunces,Georgia,serif;font-size:20px}
+.db{padding:6px 18px 18px;overflow:auto}
+.group h4{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:16px 0 8px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;padding:7px 12px;font-size:14px;transition:border-color .2s,transform .2s}
+.chip:hover{border-color:var(--grass);transform:translateY(-1px)}
+.chip.sel{background:var(--grass);border-color:var(--grass);color:var(--btn-ink)}

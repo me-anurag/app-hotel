@@ -1,0 +1,50 @@
+{
+  // Sitebox tasks. Copy this file into any project's .vscode folder.
+  // Ctrl+Shift+B runs the default build task ("Sitebox: push").
+  // Needs the CLI on PATH: run `npm link` once in the Sitebox folder.
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Sitebox: push",
+      "type": "shell",
+      "command": "sitebox push --message \"${input:message}\"",
+      "group": { "kind": "build", "isDefault": true },
+      "presentation": { "reveal": "always", "panel": "shared", "clear": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "Sitebox: push and open",
+      "type": "shell",
+      "command": "sitebox push --open",
+      "presentation": { "reveal": "always", "panel": "shared", "clear": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "Sitebox: push this file only",
+      "type": "shell",
+      "command": "sitebox push \"${file}\"",
+      "presentation": { "reveal": "always", "panel": "shared", "clear": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "Sitebox: watch (push on save)",
+      "type": "shell",
+      "command": "sitebox watch",
+      "isBackground": true,
+      "presentation": { "reveal": "always", "panel": "dedicated" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Sitebox: run locally (wrangler dev)",
+      "type": "shell",
+      "command": "npm run dev",
+      "options": { "cwd": "${workspaceFolder}" },
+      "isBackground": true,
+      "presentation": { "reveal": "always", "panel": "dedicated" },
+      "problemMatcher": []
+    }
+  ],
+  "inputs": [
+    { "id": "message", "type": "promptString", "description": "What changed? (optional)", "default": "" }
+  ]
+}
