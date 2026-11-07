@@ -227,24 +227,45 @@ dialog::backdrop{background:rgba(6,7,5,.62);backdrop-filter:blur(4px)}
 .toast.error{background:var(--danger);color:#fff}
 
 /* ---------- responsive ---------- */
+/* Phones: one calm list instead of a dense grid */
 @media (max-width:640px){
+  body::after{display:none}
   .wrap{padding:0 16px}
   .hide-sm{display:none}
-  .appbar-row{height:58px}
-  .status span{display:none}
-  .status{padding:6px}
-  .lib-head{padding:28px 0 18px;gap:14px}
-  .search{width:100%}
-  .grid{grid-template-columns:1fr 1fr;gap:12px}
-  .card-body{padding:11px 40px 12px 12px}
-  .card-title{font-size:15px}
+  .appbar-row{height:56px}
+  .logo span{font-size:19px}
+  .status{display:none}
+  .status.offline{display:inline-flex;padding:6px}
+  .status.offline span{display:none}
+  #btn-upload{height:36px;padding:0 13px;font-size:13.5px}
+
+  .lib-head{padding:22px 0 14px;gap:14px}
+  .eyebrow,.rule{display:none}
+  .lib-head h1{font-size:34px;letter-spacing:-.04em;gap:10px}
+  .count{font-size:11.5px;padding:5px 8px}
+  .search{width:100%;height:42px}
+
+  .grid{grid-template-columns:1fr;gap:8px;padding-bottom:60px}
+  .card{border-radius:12px;box-shadow:none;animation-duration:.35s}
+  .card:hover{transform:none}
+  .card-link{display:grid;grid-template-columns:92px minmax(0,1fr);align-items:center;gap:14px;padding:9px 48px 9px 9px}
+  .thumb{border:1px solid var(--line);border-radius:8px;aspect-ratio:16/10}
+  .thumb .letter{font-size:26px}
+  .idx,.go{display:none}
+  .card-body{padding:0}
+  .card-title{font-size:15.5px}
+  .card-meta{margin-top:5px;gap:7px}
+  .card-meta .v{background:none;color:var(--accent-fg);padding:0}
   .card-meta .size,.card-meta .slug{display:none}
-  .thumb .letter{font-size:44px}
-  .idx{left:7px;top:7px;padding:4px 6px}
-  .go{display:none}
+  .card .more{top:50%;bottom:auto;right:6px;transform:translateY(-50%)}
+
+  .empty{padding:50px 8px 70px}
+  .empty h2{font-size:24px}
   dialog.sheet{width:100%;max-width:100%;max-height:92vh;margin:auto 0 0;border-radius:20px 20px 0 0;border-bottom:0}
+  .sheet-head{padding:14px 12px 12px 18px}
+  .sheet-body{padding:16px 18px 22px}
+  .drop{padding:24px 14px 16px}
   .drop-actions{grid-template-columns:1fr}
   .viewer-title span{display:none}
 }
-@media (max-width:360px){.grid{grid-template-columns:1fr}}
 @media (prefers-reduced-motion: reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
